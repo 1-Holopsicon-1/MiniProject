@@ -1,0 +1,42 @@
+services:
+  wallet-database:
+    image: postgres:latest
+    container_name: wallet-db
+    restart: always
+    ports:
+      - 1616:5432
+    environment:
+      - POSTGRES_PASSWORD=pw
+      - POSTGRES_USER=user
+      - POSTGRES_DB=main
+    networks:
+      - db_network
+    healthcheck:
+      test: pg_isready -h localhost -p 5432
+      timeout: 2s
+      retries: 3
+
+    tty: true
+    stdin_open: true
+
+  wallet-backend:
+    image: wallet-backend
+    container_name: wallet-backend
+    networks:
+      - db_network
+
+    build:
+      context: ..
+      dockerfile: deploy/Dockerfile
+    depends_on:
+      wallet-database:
+        condition: service_healthy
+
+    ports:
+      - "5000:5000"
+    tty: true
+    stdin_open: true
+
+networks:
+  db_network:
+    driver: bridge
