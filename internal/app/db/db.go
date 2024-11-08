@@ -30,7 +30,7 @@ func Connect() *gorm.DB {
 	port=%s`,
 		dbHost, user, password, dbName, port)
 	db, err := gorm.Open(postgres.Open(string(dsn)),
-		&gorm.Config{Logger: logger.Default.LogMode(logger.Info)})
+		&gorm.Config{Logger: logger.Default.LogMode(logger.Silent)})
 	if err != nil {
 		log.Println("Fail to connect to DB")
 	}
@@ -44,4 +44,29 @@ func Migrate(db *gorm.DB) {
 		log.Println(err)
 		panic("Fail to migrate")
 	}
+}
+
+func TestConnect() *gorm.DB {
+	e := godotenv.Load("../../config.env")
+	if e != nil {
+		panic("No env")
+	}
+	user := os.Getenv("db_test_user")
+	password := os.Getenv("db_test_pass")
+	dbName := os.Getenv("db_test_name")
+	dbHost := os.Getenv("db_test_host")
+	port := os.Getenv("db_test_port")
+	dsn := fmt.Sprintf(`
+	host=%s
+	user=%s
+	password=%s
+	dbname=%s
+	port=%s`,
+		dbHost, user, password, dbName, port)
+	db, err := gorm.Open(postgres.Open(string(dsn)),
+		&gorm.Config{Logger: logger.Default.LogMode(logger.Info)})
+	if err != nil {
+		log.Println("Fail to connect to DB")
+	}
+	return db
 }
