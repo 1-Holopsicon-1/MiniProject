@@ -40,7 +40,7 @@ func (walletService *WalletService) Transfer(db *gorm.DB, r *http.Request) strin
 		log.Println(err, "Error to uuid")
 		return strconv.Itoa(http.StatusBadRequest) + " Wrong uuid"
 	}
-	walletDto.Amount, err = strconv.ParseFloat(jsonDecode["amount"].(string), 64)
+	walletDto.Amount = jsonDecode["amount"].(float64)
 	if err != nil {
 		log.Println(err, "Fail to convert str to float")
 		return strconv.Itoa(http.StatusBadRequest) + " Wrong number to amount"
@@ -62,6 +62,10 @@ func (walletService *WalletService) deposit(db *gorm.DB, walletDto dto.WalletDto
 		log.Println("No wallets by this id")
 		return strconv.Itoa(http.StatusBadRequest) + " No wallets by this id"
 	}
+	if walletDto.Amount < 0 {
+		log.Println("Cant deposit value below 0")
+		return strconv.Itoa(http.StatusBadRequest) + " Depositing value is below 0"
+	}
 	walletEntity.Amount += walletDto.Amount
 	db.Save(&walletEntity)
 	return strconv.Itoa(http.StatusOK) + " Success deposit"
@@ -78,7 +82,7 @@ func (walletService *WalletService) withdraw(db *gorm.DB, walletDto dto.WalletDt
 		walletDto.Amount *= -1
 	}
 	if walletEntity.Amount-walletDto.Amount <= 0 {
-		return strconv.Itoa(http.StatusBadRequest) + " Not enough money"
+		return strconv.Itoa(http.StatusBadRequest)
 	}
 	walletEntity.Amount -= walletDto.Amount
 	db.Save(&walletEntity)
